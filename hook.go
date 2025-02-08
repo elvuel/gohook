@@ -24,7 +24,9 @@ package hook
 import "C"
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"sync"
 	"time"
 	"unsafe"
@@ -57,6 +59,11 @@ const (
 	WheelDown     = 1
 )
 
+var (
+	RecordEnabled = false
+	RecordWriter  io.WriteCloser
+)
+
 // Event Holds a system event
 //
 // If it's a Keyboard event the relevant fields are:
@@ -84,6 +91,34 @@ type Event struct {
 	Amount    uint16 `json:"amount"`
 	Rotation  int32  `json:"rotation"`
 	Direction uint8  `json:"direction"`
+}
+
+type FriendlyEvent struct {
+	Kind string    `json:"kind"`
+	When time.Time `json:"when"`
+
+	Mask     uint16 `json:"mask"`
+	Reserved uint16 `json:"reserved"`
+
+	Keycode     uint16 `json:"keycode"`
+	Rawcode     uint16 `json:"rawcode"`
+	RawCodeChar string `json:"rawcodechar"`
+	Keychar     rune   `json:"keychar"`
+
+	Button uint16 `json:"button"`
+	Clicks uint16 `json:"clicks"`
+
+	X int16 `json:"x"`
+	Y int16 `json:"y"`
+
+	Amount    uint16 `json:"amount"`
+	Rotation  int32  `json:"rotation"`
+	Direction uint8  `json:"direction"`
+}
+
+func (e FriendlyEvent) ToJSON() string {
+	data, _ := json.Marshal(e)
+	return string(data)
 }
 
 var (
@@ -118,7 +153,6 @@ func Register(when uint8, cmds []string, cb func(Event)) {
 	key := len(used)
 	used = append(used, key)
 	tmp := []uint16{}
-
 	uptmp := []uint16{}
 
 	for _, v := range cmds {
@@ -140,6 +174,25 @@ func Process(evChan <-chan Event) (out chan bool) {
 	out = make(chan bool)
 	go func() {
 		for ev := range evChan {
+
+			if RecordEnabled && RecordWriter != nil {
+				// data, _ := json.Marshal(ev)
+				fe := FriendlyEvent{
+					Kind: ev.KindString(),
+					When: ev.When,
+					Mask: ev.Mask, Reserved: ev.Reserved,
+					Keycode:     ev.Keycode,
+					Rawcode:     ev.Rawcode,
+					RawCodeChar: RawcodetoKeychar(ev.Rawcode),
+					Keychar:     ev.Keychar,
+					Button:      ev.Button, Clicks: ev.Clicks,
+					X: ev.X, Y: ev.Y,
+					Amount: ev.Amount, Rotation: ev.Rotation, Direction: ev.Direction,
+				}
+				RecordWriter.Write([]byte(fe.ToJSON()))
+				RecordWriter.Write([]byte("\n"))
+			}
+
 			if ev.Kind == KeyDown || ev.Kind == KeyHold {
 				pressed[ev.Keycode] = true
 				uppressed[ev.Keycode] = true
@@ -160,7 +213,6 @@ func Process(evChan <-chan Event) (out chan bool) {
 						uppressed = make(map[uint16]bool, 256)
 						cbs[v](ev)
 					}
-
 				}
 			}
 		}
@@ -170,6 +222,37 @@ func Process(evChan <-chan Event) (out chan bool) {
 	}()
 
 	return
+}
+
+func (e Event) KindString() string {
+	evKindString := ""
+	switch e.Kind {
+	case HookEnabled:
+		evKindString = "HookEnabled"
+	case HookDisabled:
+		evKindString = "HookDisabled"
+	case KeyUp:
+		evKindString = "KeyUp"
+	case KeyHold:
+		evKindString = "KeyHold"
+	case KeyDown:
+		evKindString = "KeyDown"
+	case MouseUp:
+		evKindString = "MouseUp"
+	case MouseHold:
+		evKindString = "MouseHold"
+	case MouseDown:
+		evKindString = "MouseDown"
+	case MouseMove:
+		evKindString = "MouseMove"
+	case MouseDrag:
+		evKindString = "MouseDrag"
+	case MouseWheel:
+		evKindString = "MouseWheel"
+	case FakeEvent:
+		evKindString = "FakeEvent"
+	}
+	return evKindString
 }
 
 // String return formatted hook kind string
