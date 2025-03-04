@@ -94,8 +94,9 @@ type Event struct {
 }
 
 type FriendlyEvent struct {
-	Kind string    `json:"kind"`
-	When time.Time `json:"when"`
+	Kind string `json:"kind"`
+	// When time.Time `json:"when"`
+	When time.Duration `json:"when"`
 
 	Mask     uint16 `json:"mask"`
 	Reserved uint16 `json:"reserved"`
@@ -179,7 +180,7 @@ func Process(evChan <-chan Event) (out chan bool) {
 				// data, _ := json.Marshal(ev)
 				fe := FriendlyEvent{
 					Kind: ev.KindString(),
-					When: ev.When,
+					When: time.Duration(ev.When.UnixNano()),
 					Mask: ev.Mask, Reserved: ev.Reserved,
 					Keycode:     ev.Keycode,
 					Rawcode:     ev.Rawcode,
