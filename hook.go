@@ -234,15 +234,15 @@ func (e Event) KindString() string {
 	case KeyUp:
 		evKindString = "KeyUp"
 	case KeyHold:
-		evKindString = "KeyHold"
-	case KeyDown:
 		evKindString = "KeyDown"
+	case KeyDown:
+		evKindString = "KeyHold"
 	case MouseUp:
 		evKindString = "MouseUp"
 	case MouseHold:
-		evKindString = "MouseHold"
-	case MouseDown:
 		evKindString = "MouseDown"
+	case MouseDown:
+		evKindString = "MouseHold"
 	case MouseMove:
 		evKindString = "MouseMove"
 	case MouseDrag:
