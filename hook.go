@@ -62,6 +62,8 @@ const (
 var (
 	RecordEnabled = false
 	RecordWriter  io.WriteCloser
+
+	RecordOmitKinds = []string{"KeyHold", "HookDisabled", "MouseHold", "HookEnabled"}
 )
 
 // Event Holds a system event
@@ -170,6 +172,15 @@ func Register(when uint8, cmds []string, cb func(Event)) {
 	// return
 }
 
+func inSlice(s string, sl []string) bool {
+	for _, v := range sl {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
 // Process return go hook process
 func Process(evChan <-chan Event) (out chan bool) {
 	out = make(chan bool)
@@ -178,6 +189,9 @@ func Process(evChan <-chan Event) (out chan bool) {
 
 			if RecordEnabled && RecordWriter != nil {
 				// data, _ := json.Marshal(ev)
+				if inSlice(ev.KindString(), RecordOmitKinds) {
+					continue
+				}
 				fe := FriendlyEvent{
 					Kind: ev.KindString(),
 					When: time.Duration(ev.When.UnixNano()),
