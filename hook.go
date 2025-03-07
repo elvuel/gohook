@@ -189,23 +189,22 @@ func Process(evChan <-chan Event) (out chan bool) {
 
 			if RecordEnabled && RecordWriter != nil {
 				// data, _ := json.Marshal(ev)
-				if inSlice(ev.KindString(), RecordOmitKinds) {
-					continue
+				if !inSlice(ev.KindString(), RecordOmitKinds) {
+					fe := FriendlyEvent{
+						Kind: ev.KindString(),
+						When: time.Duration(ev.When.UnixMilli()),
+						Mask: ev.Mask, Reserved: ev.Reserved,
+						Keycode:     ev.Keycode,
+						Rawcode:     ev.Rawcode,
+						RawCodeChar: RawcodetoKeychar(ev.Rawcode),
+						Keychar:     ev.Keychar,
+						Button:      ev.Button, Clicks: ev.Clicks,
+						X: ev.X, Y: ev.Y,
+						Amount: ev.Amount, Rotation: ev.Rotation, Direction: ev.Direction,
+					}
+					RecordWriter.Write([]byte(fe.ToJSON()))
+					RecordWriter.Write([]byte("\n"))
 				}
-				fe := FriendlyEvent{
-					Kind: ev.KindString(),
-					When: time.Duration(ev.When.UnixNano()),
-					Mask: ev.Mask, Reserved: ev.Reserved,
-					Keycode:     ev.Keycode,
-					Rawcode:     ev.Rawcode,
-					RawCodeChar: RawcodetoKeychar(ev.Rawcode),
-					Keychar:     ev.Keychar,
-					Button:      ev.Button, Clicks: ev.Clicks,
-					X: ev.X, Y: ev.Y,
-					Amount: ev.Amount, Rotation: ev.Rotation, Direction: ev.Direction,
-				}
-				RecordWriter.Write([]byte(fe.ToJSON()))
-				RecordWriter.Write([]byte("\n"))
 			}
 
 			if ev.Kind == KeyDown || ev.Kind == KeyHold {
