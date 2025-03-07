@@ -192,7 +192,7 @@ func Process(evChan <-chan Event) (out chan bool) {
 				if !inSlice(ev.KindString(), RecordOmitKinds) {
 					fe := FriendlyEvent{
 						Kind: ev.KindString(),
-						When: time.Duration(ev.When.UnixMilli()),
+						When: time.Duration(ev.When.UnixMicro()),
 						Mask: ev.Mask, Reserved: ev.Reserved,
 						Keycode:     ev.Keycode,
 						Rawcode:     ev.Rawcode,
