@@ -63,11 +63,7 @@ const (
 
 var (
 	RecordEnabled = false
-<<<<<<< HEAD
 	RecordWriter  io.ReadWriter
-=======
-	RecordWriter  io.WriteCloser
->>>>>>> ef70792 (omits key and mouse hold event when recording)
 
 	RecordOmitKinds = []string{"KeyHold", "HookDisabled", "MouseHold", "HookEnabled"}
 )
@@ -228,15 +224,6 @@ func inSlice(s string, sl []string) bool {
 	return false
 }
 
-func inSlice(s string, sl []string) bool {
-	for _, v := range sl {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
-
 // Process return go hook process
 func Process(evChan <-chan Event) (out chan bool) {
 	out = make(chan bool)
@@ -258,20 +245,7 @@ func Process(evChan <-chan Event) (out chan bool) {
 						X: ev.X, Y: ev.Y,
 						Amount: ev.Amount, Rotation: ev.Rotation, Direction: ev.Direction,
 					}
-					RecordWriter.Write([]byte(fe.ToJSON()))
-					RecordWriter.Write([]byte("\n"))
-				}
-				fe := FriendlyEvent{
-					Kind: ev.KindString(),
-					When: time.Duration(ev.When.UnixNano()),
-					Mask: ev.Mask, Reserved: ev.Reserved,
-					Keycode:     ev.Keycode,
-					Rawcode:     ev.Rawcode,
-					RawCodeChar: RawcodetoKeychar(ev.Rawcode),
-					Keychar:     ev.Keychar,
-					Button:      ev.Button, Clicks: ev.Clicks,
-					X: ev.X, Y: ev.Y,
-					Amount: ev.Amount, Rotation: ev.Rotation, Direction: ev.Direction,
+					RecordWriter.Write([]byte(fe.ToJSON() + "\n"))
 				}
 			}
 
