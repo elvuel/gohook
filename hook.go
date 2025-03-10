@@ -61,7 +61,7 @@ const (
 
 var (
 	RecordEnabled = false
-	RecordWriter  io.WriteCloser
+	RecordWriter  io.ReadWriter
 
 	RecordOmitKinds = []string{"KeyHold", "HookDisabled", "MouseHold", "HookEnabled"}
 )
@@ -202,8 +202,7 @@ func Process(evChan <-chan Event) (out chan bool) {
 						X: ev.X, Y: ev.Y,
 						Amount: ev.Amount, Rotation: ev.Rotation, Direction: ev.Direction,
 					}
-					RecordWriter.Write([]byte(fe.ToJSON()))
-					RecordWriter.Write([]byte("\n"))
+					RecordWriter.Write([]byte(fe.ToJSON() + "\n"))
 				}
 			}
 
