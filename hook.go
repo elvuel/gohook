@@ -212,6 +212,7 @@ func Unregister(id int) bool {
 	delete(keys, id)
 	delete(upkeys, id)
 	delete(cbs, id)
+
 	return true
 }
 
