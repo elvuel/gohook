@@ -153,7 +153,7 @@ func allPressed(pressed map[uint16]bool, keys ...uint16) bool {
 }
 
 // Register register gohook event
-func Register(when uint8, cmds []string, cb func(Event)) {
+func Register(when uint8, cmds []string, cb func(Event)) int {
 	key := len(used)
 	used = append(used, key)
 	tmp := []uint16{}
@@ -170,7 +170,35 @@ func Register(when uint8, cmds []string, cb func(Event)) {
 	upkeys[key] = uptmp
 	cbs[key] = cb
 	events[when] = append(events[when], key)
-	// return
+
+	return key
+}
+
+func unregisterEventID(when uint8, id int) {
+	ids := events[when]
+	for i, v := range ids {
+		if v == id {
+			events[when] = append(ids[:i], ids[i+1:]...)
+			return
+		}
+	}
+}
+
+// Unregister removes a callback that was previously registered by Register.
+// It returns false when id does not exist.
+func Unregister(id int) bool {
+	if _, ok := cbs[id]; !ok {
+		return false
+	}
+
+	for when := range events {
+		unregisterEventID(when, id)
+	}
+
+	delete(keys, id)
+	delete(upkeys, id)
+	delete(cbs, id)
+	return true
 }
 
 func inSlice(s string, sl []string) bool {
@@ -367,6 +395,7 @@ func End() {
 	used = []int{}
 
 	keys = map[int][]uint16{}
+	upkeys = map[int][]uint16{}
 	cbs = map[int]func(Event){}
 	events = map[uint8][]int{}
 }
